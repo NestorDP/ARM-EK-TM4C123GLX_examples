@@ -23,10 +23,8 @@
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
 
-#include "utils/uartstdio.h"
-
 // Functions prototypes 
-void Timer0BIntHandler(void);
+void Timer0AIntHandler(void);
 
 uint32_t flag = 0x0;
 
@@ -39,23 +37,36 @@ int main(void){
     while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOF)) {}
     GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_3);
 
-    // Configure Timer0B as a 16-bit periodic timer.
+    // Timer count
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
-    TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_PERIODIC);
-    TimerPrescaleSet(TIMER0_BASE, TIMER_B, 60); 
-    TimerIntEnable(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
-    TimerEnable(TIMER0_BASE, TIMER_B);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+
+    GPIOUnlockPin(GPIO_PORTF_BASE, GPIO_PIN_0);
+    GPIOPinTypeTimer(GPIO_PORTF_BASE, GPIO_PIN_0);
+    GPIOPinConfigure(GPIO_PF0_T0CCP0);
+    GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+
+    TimerConfigure(TIMER0_BASE, (TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_COUNT));
+    TimerControlEvent(TIMER0_BASE, TIMER_A, TIMER_EVENT_POS_EDGE);
+    TimerLoadSet(TIMER0_BASE, TIMER_A, 10);
+    TimerMatchSet(TIMER0_BASE, TIMER_A, 0);
 
     // Master interrupt enable API for all interrupts
     IntMasterEnable();
-    IntEnable(INT_TIMER0B);
+    IntEnable(INT_TIMER0A);
+    TimerIntEnable(TIMER0_BASE, TIMER_CAPA_MATCH);
+
+    // Enable the timer.
+    TimerEnable(TIMER0_BASE, TIMER_A);
 	
     while (1){
+
 	}
 }
 
-void Timer0BIntHandler(void) {
-    TimerIntClear(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+void Timer0AIntHandler(void) {
+    TimerIntClear(TIMER0_BASE, TIMER_CAPA_MATCH);
     flag = ~flag;
     GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, flag & GPIO_PIN_3);
+    TimerEnable(TIMER0_BASE, TIMER_A);
 }
