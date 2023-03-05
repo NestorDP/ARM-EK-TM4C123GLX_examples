@@ -75,7 +75,7 @@ int main(void){
     IntMasterEnable();
 	
     while (1){
-		UARTprintf("\nvelocidade: ");
+		UARTprintf("\nMensagem teste ");
 		SysCtlDelay( 500 * (80000000 / 3 / 1000));
 	}
 }
