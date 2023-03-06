@@ -42,14 +42,17 @@
 
 //-----ISR prototypes-----
 void UARTStdioIntHandler (void);
-void Timer0BIntHandler(void);
+void Timer2AIntHandler(void);
 
 //-----Functions prototypes-----
 void UARTinit(void);
-void Timer0Binit(void);     // Edge count
-void Timer0Ainit(void);     // Periodic timer
+// void Timer0init(void);     // 
+void Timer2Init(void);     // Edge count
+
+uint32_t ui32flag = 0;
 
 
+// TimerValueGet(TIMER0_BASE, TIMER_A)
 
 int main(void){
     // Set the System clock to 80MHz
@@ -58,24 +61,42 @@ int main(void){
     // Configure LED green as output
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOF)) {}
-    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_3);
+    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1);
 	
     // Master interrupt enable API for all interrupts
     IntMasterEnable();
+    Timer2Init();
 	
     while (1){
-		UARTprintf("\nMensagem teste ");
-		SysCtlDelay( 500 * (80000000 / 3 / 1000));
 	}
 }
 
 //-------Functions-------
-void void Timer0Binit(void){
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
-    TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_PERIODIC);
-    TimerPrescaleSet(TIMER0_BASE, TIMER_B, 60); 
-    // TimerIntEnable(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
-    TimerEnable(TIMER0_BASE, TIMER_B);
+// void Timer0Binit(void){
+//     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+//     TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_PERIODIC);
+//     TimerPrescaleSet(TIMER0_BASE, TIMER_B, 60); 
+//     // TimerIntEnable(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+//     TimerEnable(TIMER0_BASE, TIMER_B);
+// }
+
+void Timer2Init(void) {
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+
+    GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_0);
+    GPIOPinConfigure(GPIO_PB0_T2CCP0);
+    GPIOPadConfigSet(GPIO_PORTB_BASE, GPIO_PIN_0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+
+    TimerConfigure(TIMER2_BASE, (TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_COUNT));
+    TimerControlEvent(TIMER2_BASE, TIMER_A, TIMER_EVENT_POS_EDGE);
+    TimerLoadSet(TIMER2_BASE, TIMER_A, 10);
+    TimerMatchSet(TIMER2_BASE, TIMER_A, 0);
+
+    IntEnable(INT_TIMER2A);
+    TimerIntEnable(TIMER2_BASE, TIMER_CAPA_MATCH);
+
+    TimerEnable(TIMER2_BASE, TIMER_A);
 }
 
 void UARTinit(void) {
@@ -91,8 +112,9 @@ void UARTinit(void) {
 
 
 // -------ISR------
-void Timer0BIntHandler(void) {
-    TimerIntClear(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
-    flag = ~flag;
-    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, flag & GPIO_PIN_3);
+void Timer2AIntHandler(void) {
+    TimerIntClear(TIMER2_BASE, TIMER_CAPA_MATCH);
+    ui32flag = ~ui32flag;
+    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, ui32flag & GPIO_PIN_1);
+    TimerEnable(TIMER2_BASE, TIMER_A);
 }

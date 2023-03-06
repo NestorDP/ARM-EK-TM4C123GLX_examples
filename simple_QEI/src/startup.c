@@ -59,7 +59,7 @@ static uint32_t pui32Stack[128];
 //*****************************************************************************
 // To be added by user
 extern void UARTStdioIntHandler(void);
-extern void Timer2AIntHandler(void);
+extern void QEI1IntHandler(void);
 
 //*****************************************************************************
 //
@@ -93,7 +93,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E
-    UARTStdioIntHandler,                    // UART0 Rx and Tx
+    UARTStdioIntHandler,                      // UART0 Rx and Tx  UARTStdioIntHandler
     IntDefaultHandler,                      // UART1 Rx and Tx
     IntDefaultHandler,                      // SSI0 Rx and Tx
     IntDefaultHandler,                      // I2C0 Master and Slave
@@ -111,7 +111,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Timer 0 subtimer B
     IntDefaultHandler,                      // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
-    Timer2AIntHandler,                      // Timer 2 subtimer A
+    IntDefaultHandler,                      // Timer 2 subtimer A
     IntDefaultHandler,                      // Timer 2 subtimer B
     IntDefaultHandler,                      // Analog Comparator 0
     IntDefaultHandler,                      // Analog Comparator 1
@@ -126,7 +126,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Timer 3 subtimer A
     IntDefaultHandler,                      // Timer 3 subtimer B
     IntDefaultHandler,                      // I2C1 Master and Slave
-    IntDefaultHandler,                      // Quadrature Encoder 1
+    QEI1IntHandler,                         // Quadrature Encoder 1
     IntDefaultHandler,                      // CAN0
     IntDefaultHandler,                      // CAN1
     0,                                      // Reserved
